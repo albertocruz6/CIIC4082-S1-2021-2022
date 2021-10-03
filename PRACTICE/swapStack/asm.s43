@@ -1,0 +1,41 @@
+#include "msp430.h"                     ; #define controlled include file
+
+        NAME    main                    ; module name
+
+        PUBLIC  main                    ; make the main label vissible
+                                        ; outside this module
+        ORG     0FFFEh
+        DC16    init                    ; set reset vector to 'init' label
+
+        ORG     0x01C00                 ; beginning of RAM
+
+        RSEG    CSTACK                  ; pre-declaration of segment
+        RSEG    CODE                    ; place program in 'CODE' segment
+
+init:   MOV     #SFE(CSTACK), SP        ; set up stack
+
+main:   NOP                             ; main program
+        MOV.W   #WDTPW+WDTHOLD,&WDTCTL  ; Stop watchdog timer
+        
+        PUSH    #10                     ; first value
+        PUSH    #7                      ; second value 
+        
+        call    #swapStack              ; call subroutine to swap positions in stack
+        
+        JMP $                           ; jump to current location '$'
+                                        ; (endless loop)
+        NOP
+
+swapStack:
+        POP     R5                      ; store address for next instruction
+        POP     R6                      ; store first value to swap
+        POP     R7                      ; store second value to swap
+        
+        PUSH    R6                      ; store the first value for it to ber last
+        PUSH    R7                      ; follow up with second value 
+        PUSH    R5                      ; next instruction is returned so program can end
+        
+        ret
+        
+        END
+        
