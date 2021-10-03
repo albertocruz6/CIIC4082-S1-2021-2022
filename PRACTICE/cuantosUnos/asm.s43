@@ -1,0 +1,37 @@
+#include "msp430.h"                     ; #define controlled include file
+
+        NAME    main                    ; module name
+
+        PUBLIC  main                    ; make the main label vissible
+                                        ; outside this module
+        ORG     0FFFEh
+        DC16    init                    ; set reset vector to 'init' label
+
+        RSEG    CSTACK                  ; pre-declaration of segment
+        RSEG    CODE                    ; place program in 'CODE' segment
+
+init:   MOV     #SFE(CSTACK), SP        ; set up stack
+
+main:   NOP                             ; main program
+        MOV.W   #WDTPW+WDTHOLD,&WDTCTL  ; Stop watchdog timer
+        
+        clrc                            ; clear carry bit
+        mov.w   #0, R6                  ; set initial count to 0
+        mov.w   #0x0FFFF, R5            ; value to be counted
+        
+        call    #cuantosUnos            ; call subroutine
+        
+        JMP $                           ; jump to current location '$'
+                                        ; (endless loop)
+        NOP
+
+
+bitOn:
+        inc.w   R6                      ; if carry == 1 add to R6
+
+cuantosUnos:
+        rrc     R5                      ; roll to the right using the carry
+        jc      bitOn                   ; if carry is on add to count
+        jnz     cuantosUnos             ; if it's not zero bits still remain
+        ret
+        END
